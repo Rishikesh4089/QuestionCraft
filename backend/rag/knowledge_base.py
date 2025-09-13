@@ -2,35 +2,35 @@ import os
 import shutil
 from typing import List
 from langchain_community.vectorstores import FAISS
-#--- from langchain_openai import OpenAIEmbeddings #- COMMENTED OUT
-from langchain_google_genai import GoogleGenerativeAIEmbeddings #- NEW: Import for Gemini
+from langchain_openai import OpenAIEmbeddings
+#--- from langchain_google_genai import GoogleGenerativeAIEmbeddings #- COMMENTED OUT
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from settings import settings
 
 class VectorStore:
     """
-    Manages a FAISS vector store using Google Gemini embeddings.
+    Manages a FAISS vector store using OpenAI embeddings.
     This implementation is session-specific, creating a new index for each API call.
     """
     def __init__(self, index_path: str):
-        #- UPDATED: Check for the Gemini API key instead of OpenAI's
-        if not settings.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not configured. Please set it in your .env file.")
+        #- UPDATED: Check for the OpenAI API key instead of Gemini's
+        if not settings.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is not configured. Please set it in your .env file.")
         
         self.index_path = index_path
         
-        #- COMMENTED OUT the OpenAI embeddings model
-        # self.embeddings_model = OpenAIEmbeddings(
-        #     api_key=settings.OPENAI_API_KEY,
-        #     model=settings.EMBEDDING_MODEL_NAME
-        # )
-
-        #- NEW: Initialize the Gemini embeddings model
-        self.embeddings_model = GoogleGenerativeAIEmbeddings(
-            google_api_key=settings.GEMINI_API_KEY,
-            model="models/embedding-001" # The standard model for Gemini embeddings
+        #- UNCOMMENTED the OpenAI embeddings model
+        self.embeddings_model = OpenAIEmbeddings(
+            api_key=settings.OPENAI_API_KEY,
+            model=settings.EMBEDDING_MODEL_NAME
         )
+
+        #- COMMENTED OUT: The Gemini embeddings model
+        # self.embeddings_model = GoogleGenerativeAIEmbeddings(
+        #     google_api_key=settings.GEMINI_API_KEY,
+        #     model="models/embedding-001" # The standard model for Gemini embeddings
+        # )
 
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=250)
         self.db = None
@@ -41,7 +41,7 @@ class VectorStore:
         and saves it locally.
         """
         chunks = self.text_splitter.split_documents(documents)
-        print(f"💎 Creating FAISS index from {len(chunks)} text chunks using Gemini.")
+        print(f"🤖 Creating FAISS index from {len(chunks)} text chunks using OpenAI.")
 
         if not chunks:
             print("No text chunks to store. Skipping index creation.")

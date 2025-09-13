@@ -1,11 +1,11 @@
 import json
 from agno.agent import Agent, RunOutput
-# --- from agno.models.openai import OpenAIChat <-- COMMENTED OUT OpenAI model
+from agno.models.openai import OpenAIChat
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
-# --- NEW IMPORTS for Gemini ---
-import google.generativeai as genai
+# --- COMMENTED OUT: NEW IMPORTS for Gemini ---
+# import google.generativeai as genai
 
 from .tools import extract_paper_pattern_tool, generate_question_tool
 from rag.pipeline import RAGPipeline
@@ -27,23 +27,23 @@ AGENT_INSTRUCTIONS = """
 You are a meticulous and highly experienced University Professor...
 """
 
-# --- NEW: Gemini Model Wrapper ---
+# --- COMMENTED OUT: Gemini Model Wrapper ---
 # This class makes the Gemini model compatible with the agno.Agent,
 # which expects a model object with an `arun` method.
-class GeminiModelForAgent:
-    def __init__(self, model_name: str, api_key: str):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name)
-
-    async def arun(self, prompt: str) -> RunOutput:
-        """
-        Runs the Gemini model and formats the output for the agno.Agent.
-        """
-        print("🤖 Agent is thinking with Gemini...")
-        response = await self.model.generate_content_async(prompt)
-        # The agno.Agent expects a RunOutput object. We provide the Gemini
-        # response text to its 'content' field.
-        return RunOutput(content=response.text, tool_calls=None)
+# class GeminiModelForAgent:
+#     def __init__(self, model_name: str, api_key: str):
+#         genai.configure(api_key=api_key)
+#         self.model = genai.GenerativeModel(model_name)
+# 
+#     async def arun(self, prompt: str) -> RunOutput:
+#         """
+#         Runs the Gemini model and formats the output for the agno.Agent.
+#         """
+#         print("🤖 Agent is thinking with Gemini...")
+#         response = await self.model.generate_content_async(prompt)
+#         # The agno.Agent expects a RunOutput object. We provide the Gemini
+#         # response text to its 'content' field.
+#         return RunOutput(content=response.text, tool_calls=None)
 
 async def create_and_run_agent(specification: PaperSpecification) -> Dict[str, Any]:
     rag_pipeline = None
@@ -52,23 +52,23 @@ async def create_and_run_agent(specification: PaperSpecification) -> Dict[str, A
         print("Initializing RAG pipeline with FAISS index...")
         rag_pipeline = RAGPipeline(file_paths=[specification.syllabus_file_path])
 
-        # --- Step 2: Configure the LLM and Agent (Switched to Gemini) ---
-        print(f"💎 Configuring agent with Google Gemini model...")
+        # --- Step 2: Configure the LLM and Agent (Reverted to OpenAI) ---
+        print(f"🤖 Configuring agent with OpenAI model...")
         
-        # --- COMMENTED OUT the OpenAI LLM client ---
-        # llm = OpenAIChat(
-        #     id='gpt-4.1',
-        #     api_key=settings.OPENAI_API_KEY
-        # )
-
-        # --- NEW: Use the Gemini model via our custom wrapper ---
-        llm = GeminiModelForAgent(
-            model_name='gemini-1.5-pro-latest',
-            api_key=settings.GEMINI_API_KEY
+        # The agent will now use this OpenAI model
+        llm = OpenAIChat(
+            id='gpt-4.1', # You can use settings.GENERATION_MODEL_NAME here
+            api_key=settings.OPENAI_API_KEY
         )
 
+        # --- COMMENTED OUT: Gemini model instantiation ---
+        # llm = GeminiModelForAgent(
+        #     model_name='gemini-1.5-pro-latest',
+        #     api_key=settings.GEMINI_API_KEY
+        # )
+
         agent = Agent(
-            model=llm, # The agent now uses the Gemini model
+            model=llm, # The agent now uses the OpenAIChat model
             instructions=AGENT_INSTRUCTIONS,
             tools=[extract_paper_pattern_tool, generate_question_tool],
             debug_mode=True
@@ -84,9 +84,29 @@ async def create_and_run_agent(specification: PaperSpecification) -> Dict[str, A
             pattern_instruction = f'Use the following JSON pattern directly: {specification.manual_pattern.model_dump_json()}'
 
         goal_prompt = f"""
-        **MISSION BRIEFING:**
-        ...
-        """ # (The prompt text itself is unchanged)
+            **MISSION BRIEFING:**
+            You are a meticulous University Professor tasked with generating a question paper.
+
+            Your output **must** be ONLY valid JSON, no markdown, no explanations, no extra text.
+            Use this schema:
+            {{
+            "subject": "<subject>",
+            "total_marks": <int>,
+            "questions": [
+                {{
+                "question": "<text>",
+                "marks": <int>
+                }}
+            ]
+            }}
+
+            Subject: {specification.subject}
+
+            Additional instructions:
+            - {pattern_instruction}
+            - Use this syllabus context: {initial_context}
+            """
+
 
         # --- Step 4: Run the Agent (No changes here) ---
         print("Running the agent with the master goal... This may take some time.")
@@ -94,7 +114,7 @@ async def create_and_run_agent(specification: PaperSpecification) -> Dict[str, A
         
         # --- Step 5: Process Final Response (No changes here) ---
         try:
-            # Gemini is excellent at JSON, so this should work well.
+            # Attempt to parse the agent's final output as JSON.
             final_paper = json.loads(response.content)
             print("Agent run completed successfully. Final paper parsed.")
             return final_paper

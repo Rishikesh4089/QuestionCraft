@@ -1,17 +1,17 @@
 from agno.tools import tool
 from pydantic import BaseModel, Field
 from typing import List
-#--- from agno.models.openai import OpenAIChat #- COMMENTED OUT
+from agno.models.openai import OpenAIChat
 from settings import settings
 import json
 import pypdf
 
-#--- NEW: Imports for Gemini ---
-import google.generativeai as genai
+#--- COMMENTED OUT: Imports for Gemini ---
+# import google.generativeai as genai
 
-#--- NEW: Configure the Gemini client once for all tools ---
-genai.configure(api_key=settings.GEMINI_API_KEY)
-tool_llm = genai.GenerativeModel('gemini-1.5-pro-latest')
+#--- COMMENTED OUT: Configure the Gemini client ---
+# genai.configure(api_key=settings.GEMINI_API_KEY)
+# tool_llm = genai.GenerativeModel('gemini-1.5-pro-latest')
 
 
 # --- Pydantic Models for Structured Tool I/O (No changes) ---
@@ -27,24 +27,22 @@ class PaperPattern(BaseModel):
     question_structure: List[dict] = Field(..., description="A list defining each main question, its marks, and number of sub-questions.")
 
 
-# --- LLM Client for Tools (Switched to Gemini) ---
+# --- LLM Client for Tools (Switched to OpenAI) ---
+tool_llm = OpenAIChat(
+    id=settings.GENERATION_MODEL_NAME,
+    api_key=settings.OPENAI_API_KEY,
+    temperature=0.7
+)
 
-#- COMMENTED OUT OpenAI client
-# tool_llm = OpenAIChat(
-#     id=settings.GENERATION_MODEL_NAME,
-#     api_key=settings.OPENAI_API_KEY,
-#     temperature=0.7
-# )
-
-# --- Agent Tools (Now fully powered by Gemini) ---
+# --- Agent Tools (Now fully powered by OpenAI) ---
 
 @tool
 async def extract_paper_pattern_tool(file_path: str) -> PaperPattern:
     """
-    Reads a PDF document, extracts its text, and uses the Gemini LLM to analyze and
+    Reads a PDF document, extracts its text, and uses the OpenAI LLM to analyze and
     determine the question paper's structure, instructions, and total marks.
     """
-    print(f"💎--- Running LIVE Pattern Extraction on: {file_path} with Gemini ---")
+    print(f"🤖--- Running LIVE Pattern Extraction on: {file_path} with OpenAI ---")
     try:
         reader = pypdf.PdfReader(file_path)
         text_content = ""
@@ -68,12 +66,15 @@ async def extract_paper_pattern_tool(file_path: str) -> PaperPattern:
         - "question_structure" should be a list of objects describing the questions (e.g., marks, number of sub-questions, type like compulsory/optional).
         """
         
-        #- UPDATED: Call the Gemini tool_llm and parse the response
-        response = await tool_llm.generate_content_async(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
-        data = json.loads(response.text)
+        #- UPDATED: Call the OpenAIChat tool_llm and parse the response
+        # This assumes the .chat() method returns a raw text response.
+        response_text = await tool_llm.chat(prompt)
+
+        # Clean up potential markdown formatting from the OpenAI response
+        if response_text.strip().startswith("```json"):
+            response_text = response_text.strip()[7:-3]
+            
+        data = json.loads(response_text)
         
         return PaperPattern(**data)
 
@@ -88,9 +89,9 @@ async def extract_paper_pattern_tool(file_path: str) -> PaperPattern:
 @tool
 async def generate_question_tool(context: str, question_type: str, marks: int, topic: str, subject: str) -> Question:
     """
-    Generates a single, university-level question by calling the Google Gemini API.
+    Generates a single, university-level question by calling the OpenAI API.
     """
-    print(f"💎 Generating a LIVE '{question_type}' question for topic: {topic} via Gemini API")
+    print(f"🤖 Generating a LIVE '{question_type}' question for topic: {topic} via OpenAI API")
     
     prompt = f"""
     You are a question generation expert. Based on the provided context from the syllabus of the subject '{subject}', create one high-quality, descriptive, university-level question.
@@ -112,12 +113,14 @@ async def generate_question_tool(context: str, question_type: str, marks: int, t
     """
     
     try:
-        #- UPDATED: Use the shared Gemini tool_llm and parse the response
-        response = await tool_llm.generate_content_async(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
-        data = json.loads(response.text)
+        #- UPDATED: Use the shared OpenAIChat tool_llm and parse the response
+        response_text = await tool_llm.chat(prompt)
+
+        # Clean up potential markdown formatting
+        if response_text.strip().startswith("```json"):
+            response_text = response_text.strip()[7:-3]
+
+        data = json.loads(response_text)
         
         return Question(
             question_text=data["question_text"],
@@ -126,7 +129,7 @@ async def generate_question_tool(context: str, question_type: str, marks: int, t
             topic=topic
         )
     except Exception as e:
-        print(f"Error parsing Gemini response for question generation: {e}. Using fallback.")
+        print(f"Error parsing OpenAI response for question generation: {e}. Using fallback.")
         return Question(
             question_text=f"Explain the key aspects of {topic}. [Fallback Question]",
             marks=marks,

@@ -1,4 +1,3 @@
-# No need for File or UploadFile imports here anymore
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import v1
@@ -15,7 +14,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, restrict this to your frontend's domain
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],
 )
 
@@ -35,4 +34,3 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
-# The placeholder endpoint that was here has been REMOVED.
