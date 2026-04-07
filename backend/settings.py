@@ -1,40 +1,62 @@
 import os
-from pydantic_settings import BaseSettings
+from typing import Optional
 from dotenv import load_dotenv
-from typing import Optional # <-- Import Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load environment variables from a .env file for local development
+# Load environment variables from .env
 load_dotenv()
+
 
 class Settings(BaseSettings):
     """
-    Manages the application's configuration using Pydantic BaseSettings.
-    It loads settings from environment variables for security and flexibility.
+    Fully compatible configuration loader for Pydantic v2.
+    This version:
+      ✅ Reads uppercase and lowercase env vars (auto-aliasing)
+      ✅ Allows extra env vars safely
+      ✅ Works with .env and system environment
     """
-    # --- Standard OpenAI API Key ---
-    # This is now the primary and only required credential for the LLM.
-    # Set this in your .env file: OPENAI_API_KEY="sk-..."
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "your_openai_api_key_here")
-    
-    # Model names for generation and embeddings. Using official OpenAI model names.
-    GENERATION_MODEL_NAME: str = "gpt-4-turbo" # Updated to a common, modern model name
-    EMBEDDING_MODEL_NAME: str = "text-embedding-3-small"
-    
-    # --- MODIFIED LINE ---
-    # Made GEMINI_API_KEY optional to prevent validation errors when it's not set.
+
+    # === API Keys ===
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
 
-    # Local storage paths
-    FAISS_INDEX_PATH: str = "./faiss_indexes"
-    UPLOAD_DIR: str = "./uploaded_files"
+    # === Model Config ===
+    GENERATION_MODEL_NAME: str = os.getenv("GENERATION_MODEL_NAME", "gpt-4.1")
+    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "text-embedding-3-small")
+    EMBEDDING_BACKEND: str = os.getenv("EMBEDDING_BACKEND", "sentence_transformers")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
+    # === RAG Settings ===
+    RAG_INDEX_DIR: str = os.getenv("RAG_INDEX_DIR", "./rag_index")
+    CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", 1200))
+    CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", 80))
+    USE_GPU: bool = os.getenv("USE_GPU", "true").lower() == "true"
 
-# Instantiate settings for global access
+    # === File Storage ===
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploaded_files")
+    TEMP_DIR: str = os.getenv("TEMP_DIR", "./temp")
+
+    # === Debug ===
+    DEBUG_MODE: bool = os.getenv("DEBUG_MODE", "false").lower() == "true"
+
+    # ✅ New Pydantic v2 way to configure env handling
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="allow",  # allow unknown environment variables
+        case_sensitive=False  # <--- ✅ key fix: ignore lowercase/uppercase differences
+    )
+
+
+# Instantiate global settings
 settings = Settings()
 
-# Ensure the necessary directories exist upon application startup
+# Ensure directories exist
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-os.makedirs(settings.FAISS_INDEX_PATH, exist_ok=True)
+os.makedirs(settings.RAG_INDEX_DIR, exist_ok=True)
+os.makedirs(settings.TEMP_DIR, exist_ok=True)
+
+# Optional debug print
+if settings.DEBUG_MODE:
+    print("⚙️ Loaded Configuration:")
+    for key, value in settings.model_dump().items():
+        print(f"  {key}: {value}")
