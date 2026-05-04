@@ -1,18 +1,40 @@
-agno
-fastapi
-uvicorn
-pydantic
-pydantic-settings
-python-dotenv
-openai
-faiss-cpu
-langchain
-langchain-community
-langchain-core
-langchain-openai
-pypdf
-python-pptx
-unstructured
-pytesseract
-Pillow
-python-multipart
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# ── Settings & config ─────────────────────────────────────────────────────────
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.0
+
+# ── OpenAI ────────────────────────────────────────────────────────────────────
+openai>=1.35.0
+tiktoken>=0.7.0
+
+# ── RAG — Vector store ────────────────────────────────────────────────────────
+faiss-cpu>=1.8.0
+numpy>=1.26.0
+
+# ── RAG — Text splitting ──────────────────────────────────────────────────────
+langchain-text-splitters>=0.2.0
+
+# ── RAG — Document loaders ────────────────────────────────────────────────────
+pypdf>=4.2.0
+python-pptx>=0.6.23
+
+# ── RAG — Sparse retrieval ────────────────────────────────────────────────────
+rank-bm25>=0.2.2
+
+# ── Reranking (optional but recommended) ─────────────────────────────────────
+cohere>=5.5.0
+
+# ── OCR fallback for scanned PDFs (optional) ─────────────────────────────────
+# Requires system packages: poppler-utils (pdf2image) and tesseract-ocr
+# Install on Ubuntu/Debian: sudo apt install poppler-utils tesseract-ocr
+# Install on Mac:           brew install poppler tesseract
+pdf2image>=1.17.0
+pytesseract>=0.3.10
+
+# ── Structured JSON logging (optional) ───────────────────────────────────────
+python-json-logger>=2.0.7

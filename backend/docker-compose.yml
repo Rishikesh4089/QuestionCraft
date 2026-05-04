@@ -1,0 +1,47 @@
+# docker-compose.yml
+# Local development stack.
+# Production: use docker-compose.prod.yml or deploy to your platform.
+
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      target: runtime
+    image: questioncraft-api:dev
+    container_name: questioncraft_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot-reload source (development only)
+      - ./app:/app/app:ro
+      # Persistent index storage (survives container restarts)
+      - questioncraft_index:/data/rag_index
+      - questioncraft_uploads:/data/uploads
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: development
+      LOG_JSON: "false"
+      LOG_LEVEL: DEBUG
+      DEBUG: "true"
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  questioncraft_index:
+    name: questioncraft_rag_index
+  questioncraft_uploads:
+    name: questioncraft_uploads

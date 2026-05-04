@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "questioncraft-api"
+version = "3.0.0"
+description = "RAG-powered university question paper generation API"
+requires-python = ">=3.11"
+
+dependencies = [
+    # Web framework
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",      # multipart/form-data uploads
+
+    # Settings
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "python-dotenv>=1.0.0",
+
+    # OpenAI
+    "openai>=1.35.0",
+    "tiktoken>=0.7.0",
+
+    # RAG — Vector store
+    "faiss-cpu>=1.8.0",
+    "numpy>=1.26.0",
+
+    # RAG — Text splitting
+    "langchain-text-splitters>=0.2.0",
+
+    # RAG — Document loaders
+    "pypdf>=4.2.0",
+    "python-pptx>=0.6.23",
+
+    # RAG — Sparse retrieval (optional but strongly recommended)
+    "rank-bm25>=0.2.2",
+]
+
+[project.optional-dependencies]
+rerank = [
+    "cohere>=5.5.0",
+]
+ocr = [
+    "pdf2image>=1.17.0",
+    "pytesseract>=0.3.10",
+]
+logging = [
+    "python-json-logger>=2.0.7",
+]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",              # async test client for FastAPI
+    "pytest-cov>=5.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+all = [
+    "questioncraft-api[rerank,ocr,logging,dev]",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
