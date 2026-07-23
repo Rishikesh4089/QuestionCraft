@@ -1,39 +1,108 @@
-import { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import LandingPage from './pages/LandingPage';
-import AuthPage from './pages/AuthPage';
-import Dashboard from './pages/Dashboard';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-function AppContent() {
-  const [showAuth, setShowAuth] = useState(false);
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+
+import LandingPage from "./pages/Landing/LandingPage";
+import LoginPage from "./pages/Auth/LoginPage";
+import SignupPage from "./pages/Auth/SignupPage";
+
+import MainLayout from "./pages/MainLayout";
+
+function AppRoutes() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--qc-bg)] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-slate-800 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
+          <div
+            className="
+              w-14
+              h-14
+              border-4
+              border-[var(--qc-primary)]
+              border-t-transparent
+              rounded-full
+              animate-spin
+              mx-auto
+              mb-6
+            "
+          />
+
+          <p className="text-[var(--qc-text-secondary)]">
+            Loading...
+          </p>
         </div>
       </div>
     );
   }
 
-  if (user) {
-    return <Dashboard />;
-  }
+  return (
+    <Routes>
+      {/* Public */}
 
-  if (showAuth) {
-    return <AuthPage onBack={() => setShowAuth(false)} />;
-  }
+      <Route
+        path="/"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <LandingPage />
+          )
+        }
+      />
 
-  return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+      <Route
+        path="/login"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <LoginPage />
+          )
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <SignupPage />
+          )
+        }
+      />
+
+      {/* Protected */}
+
+      <Route
+        path="/dashboard"
+        element={
+          user ? (
+            <MainLayout />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      {/* 404 */}
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
+    </Routes>
+  );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
