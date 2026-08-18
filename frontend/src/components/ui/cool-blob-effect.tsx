@@ -1,4 +1,3 @@
-import React from "react";
 import "./cool-blob.css"; // 👈 we’ll add this CSS next
 
 export function Component() {

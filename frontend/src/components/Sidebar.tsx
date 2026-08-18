@@ -1,5 +1,5 @@
 // src/components/layout/Sidebar.tsx
-import { FileText, PlusCircle, History, Settings, HelpCircle, LogOut, Search, Home, ChevronRight } from "lucide-react";
+import { PlusCircle, History, Settings, HelpCircle, LogOut, Search, Home, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 

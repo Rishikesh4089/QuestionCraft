@@ -109,7 +109,7 @@ export async function generatePaperPDF(paperData: any): Promise<Blob> {
   let y = height - 60; // start from top margin
   const fontSizeTitle = 18;
   const fontSizeSub = 13;
-  const fontSizeText = 12;
+
 
   // 🧩 Utility: wrap text to fit page width
   const wrapText = (text: string, fontUsed: any, fontSize: number): string[] => {

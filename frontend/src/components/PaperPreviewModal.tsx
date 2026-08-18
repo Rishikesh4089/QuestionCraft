@@ -3,7 +3,6 @@ import { useState } from "react";
 import { X, Download, RefreshCw, Trash2, Save, Edit3, FileText, Code } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/Badge";
-import { Spinner } from "@/components/ui/Spinner";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -138,11 +137,11 @@ export default function PaperPreviewModal({
           </div>
           <div className="flex items-center gap-2">
             {tab === "edit" ? (
-              <Button size="sm" loading={saving} icon={<Save className="w-3.5 h-3.5" />} onClick={saveFinalPaper}>
+              <Button size="sm" loading={saving} leftIcon={<Save className="w-3.5 h-3.5" />} onClick={saveFinalPaper}>
                 Save Final
               </Button>
             ) : (
-              <Button size="sm" variant="outline" icon={<Edit3 className="w-3.5 h-3.5" />} onClick={() => setTab("edit")}>
+              <Button size="sm" variant="outline" leftIcon={<Edit3 className="w-3.5 h-3.5" />} onClick={() => setTab("edit")}>
                 Edit Paper
               </Button>
             )}
@@ -209,12 +208,12 @@ export default function PaperPreviewModal({
                       <Button
                         size="sm" variant="outline"
                         loading={loadingSection === section.section}
-                        icon={<RefreshCw className="w-3.5 h-3.5" />}
+                        leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
                         onClick={() => regenerateSection(section)}
                       >
                         Regenerate
                       </Button>
-                      <Button size="sm" variant="danger" icon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => deleteSection(section.section)}>
+                      <Button size="sm" variant="danger" leftIcon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => deleteSection(section.section)}>
                         Delete
                       </Button>
                     </div>
@@ -238,7 +237,7 @@ export default function PaperPreviewModal({
                           <Button
                             size="sm" variant="ghost"
                             loading={loadingQuestion === qKey}
-                            icon={<RefreshCw className="w-3 h-3" />}
+                            leftIcon={<RefreshCw className="w-3 h-3" />}
                             onClick={() => regenerateQuestion(section, idx)}
                           >
                             Regen

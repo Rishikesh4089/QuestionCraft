@@ -41,13 +41,13 @@ export default function GeneratePaper() {
     setFiles((prev) => prev.filter((f) => f.name !== fileName));
 
   // ----- Question types -----
-  const QUESTION_TYPE_OPTIONS = [
-    "Very Short Answer",
-    "Short Answer",
-    "Long Answer",
-    "Essay",
-    "Multiple Choice",
-  ];
+  // const QUESTION_TYPE_OPTIONS = [
+  //   "Very Short Answer",
+  //   "Short Answer",
+  //   "Long Answer",
+  //   "Essay",
+  //   "Multiple Choice",
+  // ];
 
   const addQuestionType = () =>
     setQuestionTypes((prev) => [
@@ -77,7 +77,7 @@ export default function GeneratePaper() {
     setQuestionTypes((prev) => prev.filter((qt) => qt.id !== id));
 
   // ----- Upload helper -----
-  const uploadToSupabase = async (fileName: string, fileBlob: Blob, type: string) => {
+  const uploadToSupabase = async (fileName: string, fileBlob: Blob, _type: string) => {
     if (!user?.id) throw new Error("User not logged in");
     const filePath = `${user.id}/${Date.now()}_${fileName}`;
 
@@ -396,7 +396,7 @@ function ConfigureStep({
 
         {/* Question Type Config */}
         <div className="mb-2 font-medium">Question Types:</div>
-        {questionTypes.map((qt: any, index: number) => (
+        {questionTypes.map((qt: any, _index: number) => (
           <div key={qt.id} className="flex items-center gap-3 mb-3">
             <select
               value={qt.type}

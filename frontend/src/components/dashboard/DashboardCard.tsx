@@ -1,7 +1,7 @@
 // src/components/dashboard/DashboardCard.tsx
 
 import { ReactNode } from "react";
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 
 interface DashboardCardProps {
   children: ReactNode;
@@ -16,7 +16,7 @@ export default function DashboardCard({
 }: DashboardCardProps) {
   return (
     <div
-      className={clsx(
+      className={cn(
         "rounded-3xl",
         "bg-white",
         "border",
