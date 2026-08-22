@@ -82,7 +82,7 @@ function AppRoutes() {
           user ? (
             <MainLayout />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/" replace />
           )
         }
       />
